@@ -1,24 +1,19 @@
-name: Sync Issues to Project
-
+name: Issue to Project
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, labeled]
 
 jobs:
-  sync_to_project:
+  add-to-project:
+    name: Add issue to project
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out the repository
-      uses: actions/checkout@v2
-
-    - name: Sync issue to project
-      env:
-        GH_PAT: ${{ secrets.GH_PAT }}
-      run: |
-        ISSUE_URL=$(jq -r .issue.url $GITHUB_EVENT_PATH)
-        PROJECT_ID="88"
-        PROJECT_VIEW_ID="7"
-        PROJECT_URL="https://api.github.com/projects/$PROJECT_ID/views/$PROJECT_VIEW_ID/items"
-        
-        curl -X POST -H "Authorization: token $GH_PAT" -H "Accept: application/vnd.github.v3+json" $PROJECT_URL -d "{\"content_id\": $(jq -r .issue.id $GITHUB_EVENT_PATH), \"content_type\": \"Issue\"}"
+      - uses: actions/add-to-project@main
+        id: addItem
+        with:
+          project-url: https://github.com/orgs/OpenPecha/projects/88/
+          github-token: ${{ secrets.GH_PAT }}
+          labeled: bug, Feedback
+          label-operator: OR
+      - name: Debug output itemId
+        run: echo "Item ID is ${{ steps.addItem.outputs.itemId }}"
